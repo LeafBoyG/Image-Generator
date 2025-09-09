@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ---CONTROL ELEMENTS---
-    const generateBtn = document.getElementById('generate-btn');
+    const randomiseAllBtn = document.getElementById('randomise-all-btn');
+    const randomiseShapesBtn = document.getElementById('randomise-shapes-btn');
+    const randomiseColoursBtn = document.getElementById('randomise-colours-btn');
     const downloadBtn = document.getElementById('download-btn');
     const svgContainer = document.getElementById('svg-container');
     const themeRadios = document.querySelectorAll('#theme-options input[type="radio"]');
@@ -9,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addColorBtn = document.getElementById('add-color-btn');
     const customThemeSwatches = document.getElementById('custom-theme-swatches');
 
-    // ---CONFIGURATION---
+    let gridState = [];
     const THEMES = {
         codeEditor: ['#E91E63', '#cc0000', '#FF9800', '#0000DD', '#0066bb', '#336699', '#bb0066', '#22bb22'],
         sunset: ['#F94144', '#F3722C', '#F8961E', '#F9844A', '#F9C74F', '#90BE6D', '#43AA8B'],
@@ -19,17 +20,119 @@ document.addEventListener('DOMContentLoaded', () => {
         pastelDream: ['#FAD2E1', '#E2ECE9', '#BEE1E6', '#F0EFEB', '#FFD8BE', '#DFE7FD'],
         neonGlow: ['#F72585', '#7209B7', '#3A0CA3', '#4361EE', '#4CC9F0', '#00F5D4'],
     };
-    
     let customThemeColors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF'];
-
     const BACKGROUND_COLOR = '#EFEFEF';
     const SVG_WIDTH = 1584;
     const SVG_HEIGHT = 396;
     const GRID_COLS = 12;
     const GRID_ROWS = 3;
     const TILE_SIZE = SVG_WIDTH / GRID_COLS;
+    const getActiveColors = () => {
+        const selectedThemeRadio = document.querySelector('#theme-options input[type="radio"]:checked');
+        const selectedThemeName = selectedThemeRadio ? selectedThemeRadio.value : 'codeEditor';
+        let activeColors = [];
+        if (selectedThemeName === 'custom') {
+            activeColors = customThemeColors;
+        } else {
+            activeColors = THEMES[selectedThemeName];
+        }
+        if (!activeColors || activeColors.length === 0) {
+            activeColors = THEMES.codeEditor;
+        }
+        return activeColors;
+    };
+    
+    const getAvailableShapes = () => {
+        const shapes = [];
+        shapeCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) { shapes.push(checkbox.value); }
+        });
+        return shapes;
+    };
+    const randomiseAll = () => {
+        const availableShapes = getAvailableShapes();
+        const activeColors = getActiveColors();
+        gridState = [];
+ 
+        if (availableShapes.length === 0 || activeColors.length === 0) {
+            renderGrid(); // Render an empty grid if no options are selected
+            return;
+        }
+        
+        const shuffledColors = activeColors.sort(() => 0.5 - Math.random());
+        const uniqueColors = [...new Set(shuffledColors)]; 
+        const generationPalette = uniqueColors.slice(0, 5);
 
-    // ---CUSTOM THEME FUNCTIONS---
+        for (let i = 0; i < GRID_ROWS; i++) {
+            gridState[i] = [];
+            for (let j = 0; j < GRID_COLS; j++) {
+                gridState[i][j] = {
+                    shape: availableShapes[Math.floor(Math.random() * availableShapes.length)],
+                    color: generationPalette[Math.floor(Math.random() * generationPalette.length)],
+                    orientation: (i + j) % 4,
+                };
+            }
+        }
+        renderGrid();
+    };
+
+    const randomiseShapes = () => {
+        const availableShapes = getAvailableShapes();
+        if (availableShapes.length === 0 || !gridState.length) return;
+
+        gridState.forEach((row, i) => {
+            row.forEach((tile, j) => {
+                tile.shape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+                tile.orientation = (i + j) % 4;
+            });
+        });
+        renderGrid();
+    };
+
+    const randomiseColours = () => {
+        const activeColors = getActiveColors();
+        if (activeColors.length === 0 || !gridState.length) return;
+        
+        const shuffledColors = activeColors.sort(() => 0.5 - Math.random());
+        const uniqueColors = [...new Set(shuffledColors)]; 
+        const generationPalette = uniqueColors.slice(0, 5);
+        if(generationPalette.length === 0) return;
+
+        gridState.forEach(row => {
+            row.forEach(tile => {
+                tile.color = generationPalette[Math.floor(Math.random() * generationPalette.length)];
+            });
+        });
+        renderGrid();
+    };
+
+    const renderGrid = () => {
+        svgContainer.innerHTML = '';
+        const svg = createSVGElement('svg', {
+            width: SVG_WIDTH, height: SVG_HEIGHT, viewBox: `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`, id: 'generated-svg'
+        });
+        svg.appendChild(createSVGElement('rect', { x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT, fill: BACKGROUND_COLOR }));
+
+        if (!gridState.length) {
+            svgContainer.appendChild(svg);
+            return;
+        }
+
+        gridState.forEach((row, i) => {
+            row.forEach((tile, j) => {
+                const tileX = j * TILE_SIZE;
+                const tileY = i * TILE_SIZE;
+                
+                switch (tile.shape) {
+                    case 'arc': svg.appendChild(createQuarterCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation)); break;
+                    case 'eye': svg.appendChild(createEyeShape(tileX, tileY, TILE_SIZE, tile.color, tile.orientation)); break;
+                    case 'semi': svg.appendChild(createSemiCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation)); break;
+                    case 'circle': svg.appendChild(createCircle(tileX, tileY, TILE_SIZE, tile.color)); break;
+                }
+            });
+        });
+        svgContainer.appendChild(svg);
+    };
     const renderSwatches = () => {
         customThemeSwatches.innerHTML = '';
         customThemeColors.forEach((color, index) => {
@@ -53,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             customThemeColors.push(newColor);
             renderSwatches();
             const customRadio = document.querySelector('#theme-custom');
-            if (customRadio && customRadio.checked) { generatePattern(); }
+            if (customRadio && customRadio.checked) { randomiseColours(); }
         }
     };
 
@@ -61,10 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
         customThemeColors.splice(index, 1);
         renderSwatches();
         const customRadio = document.querySelector('#theme-custom');
-        if (customRadio && customRadio.checked) { generatePattern(); }
+        if (customRadio && customRadio.checked) { randomiseColours(); }
     };
 
-    // ---SHAPE DRAWING FUNCTIONS---
     function createSVGElement(tag, attributes = {}) {
         const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
         for (const key in attributes) { element.setAttribute(key, attributes[key]); }
@@ -116,73 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
         path.setAttribute('d', d);
         return path;
     }
-
-    // ---GENERATE PATTERN FUNCTION---
-    const generatePattern = () => {
-        svgContainer.innerHTML = '';
-        const svg = createSVGElement('svg', {
-            width: SVG_WIDTH, height: SVG_HEIGHT, viewBox: `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`, id: 'generated-svg'
-        });
-        svg.appendChild(createSVGElement('rect', {
-            x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT, fill: BACKGROUND_COLOR
-        }));
-
-        const selectedThemeRadio = document.querySelector('#theme-options input[type="radio"]:checked');
-        const selectedThemeName = selectedThemeRadio ? selectedThemeRadio.value : 'codeEditor';
-        
-        let activeColors = [];
-        if (selectedThemeName === 'custom') {
-            activeColors = customThemeColors;
-        } else {
-            activeColors = THEMES[selectedThemeName];
-        }
-
-        if (!activeColors || activeColors.length === 0) {
-            activeColors = THEMES.codeEditor;
-        }
-
-        const shuffledColors = activeColors.sort(() => 0.5 - Math.random());
-        const uniqueColors = [...new Set(shuffledColors)]; 
-        const generationPalette = uniqueColors.slice(0, 5);
-
-        const availableShapes = [];
-        shapeCheckboxes.forEach(checkbox => {
-            if (checkbox.checked) { availableShapes.push(checkbox.value); }
-        });
-
-        if (availableShapes.length === 0 || generationPalette.length === 0) {
-            svgContainer.appendChild(svg);
-            return;
-        }
-
-        for (let i = 0; i < GRID_ROWS; i++) {
-            for (let j = 0; j < GRID_COLS; j++) {
-                const tileX = j * TILE_SIZE;
-                const tileY = i * TILE_SIZE;
-                const shapeType = availableShapes[Math.floor(Math.random() * availableShapes.length)];
-                const fillColor = generationPalette[Math.floor(Math.random() * generationPalette.length)];
-                const orientation = (i + j) % 4;
-                switch (shapeType) {
-                    case 'arc': 
-                        svg.appendChild(createQuarterCircle(tileX, tileY, TILE_SIZE, fillColor, orientation)); 
-                        break;
-                    case 'eye': 
-                        // CORRECTED: The typo 'TILE_S_SIZE' is now 'TILE_SIZE'
-                        svg.appendChild(createEyeShape(tileX, tileY, TILE_SIZE, fillColor, orientation)); 
-                        break;
-                    case 'semi': 
-                        svg.appendChild(createSemiCircle(tileX, tileY, TILE_SIZE, fillColor, orientation)); 
-                        break;
-                    case 'circle': 
-                        svg.appendChild(createCircle(tileX, tileY, TILE_SIZE, fillColor)); 
-                        break;
-                }
-            }
-        }
-        svgContainer.appendChild(svg);
-    };
-    
-    // ---DOWNLOAD FUNCTION---
     const downloadPattern = () => {
         const svg = document.getElementById('generated-svg');
         if (!svg) { console.error("No SVG found to download."); return; }
@@ -208,12 +243,12 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = svgDataUrl;
     };
 
-    // ---EVENT LISTENERS---
-    generateBtn.addEventListener('click', generatePattern);
+    randomiseAllBtn.addEventListener('click', randomiseAll);
+    randomiseShapesBtn.addEventListener('click', randomiseShapes);
+    randomiseColoursBtn.addEventListener('click', randomiseColours);
     downloadBtn.addEventListener('click', downloadPattern);
-    
-    themeRadios.forEach(radio => radio.addEventListener('change', generatePattern));
-    shapeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', generatePattern));
+    themeRadios.forEach(radio => radio.addEventListener('change', randomiseAll));
+    shapeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', randomiseAll));
     
     addColorBtn.addEventListener('click', addColor);
     customThemeSwatches.addEventListener('click', (e) => {
@@ -222,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ---INITIAL SETUP---
     renderSwatches();
-    generatePattern();
+    randomiseAll(); 
 });

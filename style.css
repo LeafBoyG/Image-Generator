@@ -87,11 +87,37 @@ p {
     outline: none;
 }
 
-#generate-btn { background-color: #28a745; }
-#generate-btn:hover { background-color: #218838; transform: translateY(-2px); }
+#randomise-all-btn, #randomise-shapes-btn, #randomise-colours-btn, #download-btn {
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    outline: none;
+}
 
-#download-btn { background-color: #007bff; }
-#download-btn:hover { background-color: #0069d9; transform: translateY(-2px); }
+#randomise-all-btn:hover, #randomise-shapes-btn:hover, #randomise-colours-btn:hover, #download-btn:hover {
+    transform: translateY(-2px);
+}
+
+#randomise-all-btn { background-color: #28a745; }
+
+#randomise-all-btn:hover { background-color: #218838; }
+
+#randomise-shapes-btn { background-color: #007bff; }
+
+#randomise-shapes-btn:hover { background-color: #0069d9; }
+
+#randomise-colours-btn { background-color: #E91E63; }
+
+#randomise-colours-btn:hover { background-color: #c2185b; }
+
+#download-btn { background-color: #6c757d; }
+
+#download-btn:hover { background-color: #5a6268; }
 
 .custom-theme-controls {
     display: flex;
