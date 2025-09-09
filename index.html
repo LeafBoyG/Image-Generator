@@ -10,15 +10,66 @@
 
     <div class="generator-wrapper">
         <h1>SVG Shape Generator</h1>
-        <p>Click the button to generate new geometric patterns.</p>
+        <p>Select your options and click the button to generate new geometric patterns.</p>
         
+        <fieldset class="options-fieldset" id="theme-options">
+            <legend>Color Themes (Select one or more)</legend>
+            <div class="option">
+                <input type="checkbox" id="theme-codeEditor" value="codeEditor" checked>
+                <label for="theme-codeEditor">Code Editor</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="theme-sunset" value="sunset">
+                <label for="theme-sunset">Sunset</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="theme-oceanDeep" value="oceanDeep">
+                <label for="theme-oceanDeep">Ocean Deep</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="theme-forestFloor" value="forestFloor">
+                <label for="theme-forestFloor">Forest Floor</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="theme-monochrome" value="monochrome">
+                <label for="theme-monochrome">Monochrome</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="theme-pastelDream" value="pastelDream">
+                <label for="theme-pastelDream">Pastel Dream</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="theme-neonGlow" value="neonGlow">
+                <label for="theme-neonGlow">Neon Glow</label>
+            </div>
+        </fieldset>
+
+        <fieldset class="options-fieldset" id="shape-options">
+            <legend>Shape Options</legend>
+            <div class="option">
+                <input type="checkbox" id="shape-arc" value="arc" checked>
+                <label for="shape-arc">Quarter Circles</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="shape-eye" value="eye" checked>
+                <label for="shape-eye">Eye Shapes</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="shape-semi" value="semi" checked>
+                <label for="shape-semi">Semi Circles</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" id="shape-circle" value="circle">
+                <label for="shape-circle">Circles</label>
+            </div>
+        </fieldset>
+
         <div class="button-group">
             <button id="generate-btn">Generate Pattern</button>
             <button id="download-btn">Download Image</button>
         </div>
         
-        <div id="svg-container">
-            </div>
+        <div id="svg-container"></div>
     </div>
 
     <script src="script.js"></script>
