@@ -1,10 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Control elements
+    // ---CONTROL ELEMENTS---
     const generateBtn = document.getElementById('generate-btn');
     const downloadBtn = document.getElementById('download-btn');
     const svgContainer = document.getElementById('svg-container');
-    const themeCheckboxes = document.querySelectorAll('#theme-options input[type="checkbox"]');
+    const themeRadios = document.querySelectorAll('#theme-options input[type="radio"]');
     const shapeCheckboxes = document.querySelectorAll('#shape-options input[type="checkbox"]');
+    const colorPicker = document.getElementById('color-picker');
+    const addColorBtn = document.getElementById('add-color-btn');
+    const customThemeSwatches = document.getElementById('custom-theme-swatches');
 
     // ---CONFIGURATION---
     const THEMES = {
@@ -17,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
         neonGlow: ['#F72585', '#7209B7', '#3A0CA3', '#4361EE', '#4CC9F0', '#00F5D4'],
     };
     
+    let customThemeColors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF'];
+
     const BACKGROUND_COLOR = '#EFEFEF';
     const SVG_WIDTH = 1584;
     const SVG_HEIGHT = 396;
@@ -24,11 +29,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const GRID_ROWS = 3;
     const TILE_SIZE = SVG_WIDTH / GRID_COLS;
 
+    // ---CUSTOM THEME FUNCTIONS---
+    const renderSwatches = () => {
+        customThemeSwatches.innerHTML = '';
+        customThemeColors.forEach((color, index) => {
+            const swatch = document.createElement('div');
+            swatch.className = 'swatch';
+            swatch.style.backgroundColor = color;
+            swatch.title = color;
+            const removeBtn = document.createElement('div');
+            removeBtn.className = 'remove-swatch';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.dataset.index = index;
+            swatch.appendChild(removeBtn);
+            customThemeSwatches.appendChild(swatch);
+        });
+    };
+
+    const addColor = () => {
+        if (customThemeColors.length >= 10) { alert("You can have a maximum of 10 custom colors."); return; }
+        const newColor = colorPicker.value;
+        if (!customThemeColors.includes(newColor)) {
+            customThemeColors.push(newColor);
+            renderSwatches();
+            const customRadio = document.querySelector('#theme-custom');
+            if (customRadio && customRadio.checked) { generatePattern(); }
+        }
+    };
+
+    const removeColor = (index) => {
+        customThemeColors.splice(index, 1);
+        renderSwatches();
+        const customRadio = document.querySelector('#theme-custom');
+        if (customRadio && customRadio.checked) { generatePattern(); }
+    };
+
+    // ---SHAPE DRAWING FUNCTIONS---
     function createSVGElement(tag, attributes = {}) {
         const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
-        for (const key in attributes) {
-            element.setAttribute(key, attributes[key]);
-        }
+        for (const key in attributes) { element.setAttribute(key, attributes[key]); }
         return element;
     }
 
@@ -47,12 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function createCircle(x, y, size, color) {
-        return createSVGElement('circle', {
-            cx: x + size / 2,
-            cy: y + size / 2,
-            r: size / 2,
-            fill: color
-        });
+        return createSVGElement('circle', { cx: x + size / 2, cy: y + size / 2, r: size / 2, fill: color });
     }
 
     function createSemiCircle(x, y, size, color, orientation) {
@@ -83,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return path;
     }
 
+    // ---GENERATE PATTERN FUNCTION---
     const generatePattern = () => {
         svgContainer.innerHTML = '';
         const svg = createSVGElement('svg', {
@@ -92,26 +127,27 @@ document.addEventListener('DOMContentLoaded', () => {
             x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT, fill: BACKGROUND_COLOR
         }));
 
-        let combinedColors = [];
-        themeCheckboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                combinedColors = combinedColors.concat(THEMES[checkbox.value]);
-            }
-        });
-
-        if (combinedColors.length === 0) {
-            combinedColors = THEMES.codeEditor;
+        const selectedThemeRadio = document.querySelector('#theme-options input[type="radio"]:checked');
+        const selectedThemeName = selectedThemeRadio ? selectedThemeRadio.value : 'codeEditor';
+        
+        let activeColors = [];
+        if (selectedThemeName === 'custom') {
+            activeColors = customThemeColors;
+        } else {
+            activeColors = THEMES[selectedThemeName];
         }
 
-        const shuffledColors = combinedColors.sort(() => 0.5 - Math.random());
+        if (!activeColors || activeColors.length === 0) {
+            activeColors = THEMES.codeEditor;
+        }
+
+        const shuffledColors = activeColors.sort(() => 0.5 - Math.random());
         const uniqueColors = [...new Set(shuffledColors)]; 
         const generationPalette = uniqueColors.slice(0, 5);
 
         const availableShapes = [];
         shapeCheckboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                availableShapes.push(checkbox.value);
-            }
+            if (checkbox.checked) { availableShapes.push(checkbox.value); }
         });
 
         if (availableShapes.length === 0 || generationPalette.length === 0) {
@@ -126,19 +162,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const shapeType = availableShapes[Math.floor(Math.random() * availableShapes.length)];
                 const fillColor = generationPalette[Math.floor(Math.random() * generationPalette.length)];
                 const orientation = (i + j) % 4;
-
                 switch (shapeType) {
-                    case 'arc':
-                        svg.appendChild(createQuarterCircle(tileX, tileY, TILE_SIZE, fillColor, orientation));
+                    case 'arc': 
+                        svg.appendChild(createQuarterCircle(tileX, tileY, TILE_SIZE, fillColor, orientation)); 
                         break;
-                    case 'eye':
-                        svg.appendChild(createEyeShape(tileX, tileY, TILE_SIZE, fillColor, orientation));
+                    case 'eye': 
+                        // CORRECTED: The typo 'TILE_S_SIZE' is now 'TILE_SIZE'
+                        svg.appendChild(createEyeShape(tileX, tileY, TILE_SIZE, fillColor, orientation)); 
                         break;
-                    case 'semi':
-                        svg.appendChild(createSemiCircle(tileX, tileY, TILE_SIZE, fillColor, orientation));
+                    case 'semi': 
+                        svg.appendChild(createSemiCircle(tileX, tileY, TILE_SIZE, fillColor, orientation)); 
                         break;
-                    case 'circle':
-                        svg.appendChild(createCircle(tileX, tileY, TILE_SIZE, fillColor));
+                    case 'circle': 
+                        svg.appendChild(createCircle(tileX, tileY, TILE_SIZE, fillColor)); 
                         break;
                 }
             }
@@ -146,13 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
         svgContainer.appendChild(svg);
     };
     
+    // ---DOWNLOAD FUNCTION---
     const downloadPattern = () => {
         const svg = document.getElementById('generated-svg');
-        if (!svg) {
-            console.error("No SVG found to download.");
-            return;
-        }
-
+        if (!svg) { console.error("No SVG found to download."); return; }
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svg);
         const canvas = document.createElement('canvas');
@@ -161,10 +194,8 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.height = SVG_HEIGHT * scale;
         const ctx = canvas.getContext('2d');
         ctx.scale(scale, scale);
-
         const img = new Image();
         const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-
         img.onload = function () {
             ctx.drawImage(img, 0, 0);
             const link = document.createElement('a');
@@ -177,12 +208,21 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = svgDataUrl;
     };
 
+    // ---EVENT LISTENERS---
     generateBtn.addEventListener('click', generatePattern);
     downloadBtn.addEventListener('click', downloadPattern);
     
-    document.querySelectorAll('.options-fieldset input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', generatePattern);
+    themeRadios.forEach(radio => radio.addEventListener('change', generatePattern));
+    shapeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', generatePattern));
+    
+    addColorBtn.addEventListener('click', addColor);
+    customThemeSwatches.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-swatch')) {
+            removeColor(e.target.dataset.index);
+        }
     });
 
+    // ---INITIAL SETUP---
+    renderSwatches();
     generatePattern();
 });

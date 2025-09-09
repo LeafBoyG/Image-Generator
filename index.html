@@ -13,35 +13,48 @@
         <p>Select your options and click the button to generate new geometric patterns.</p>
         
         <fieldset class="options-fieldset" id="theme-options">
-            <legend>Color Themes (Select one or more)</legend>
+            <legend>Color Theme</legend>
             <div class="option">
-                <input type="checkbox" id="theme-codeEditor" value="codeEditor" checked>
+                <input type="radio" id="theme-codeEditor" name="theme" value="codeEditor" checked>
                 <label for="theme-codeEditor">Code Editor</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="theme-sunset" value="sunset">
+                <input type="radio" id="theme-sunset" name="theme" value="sunset">
                 <label for="theme-sunset">Sunset</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="theme-oceanDeep" value="oceanDeep">
+                <input type="radio" id="theme-oceanDeep" name="theme" value="oceanDeep">
                 <label for="theme-oceanDeep">Ocean Deep</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="theme-forestFloor" value="forestFloor">
+                <input type="radio" id="theme-forestFloor" name="theme" value="forestFloor">
                 <label for="theme-forestFloor">Forest Floor</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="theme-monochrome" value="monochrome">
+                <input type="radio" id="theme-monochrome" name="theme" value="monochrome">
                 <label for="theme-monochrome">Monochrome</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="theme-pastelDream" value="pastelDream">
+                <input type="radio" id="theme-pastelDream" name="theme" value="pastelDream">
                 <label for="theme-pastelDream">Pastel Dream</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="theme-neonGlow" value="neonGlow">
+                <input type="radio" id="theme-neonGlow" name="theme" value="neonGlow">
                 <label for="theme-neonGlow">Neon Glow</label>
             </div>
+            <div class="option">
+                <input type="radio" id="theme-custom" name="theme" value="custom">
+                <label for="theme-custom">Custom</label>
+            </div>
+        </fieldset>
+
+        <fieldset class="options-fieldset" id="custom-theme-creator">
+            <legend>Custom Theme Creator</legend>
+            <div class="custom-theme-controls">
+                <input type="color" id="color-picker" value="#fd7e14">
+                <button id="add-color-btn">Add Color</button>
+            </div>
+            <div id="custom-theme-swatches"></div>
         </fieldset>
 
         <fieldset class="options-fieldset" id="shape-options">
@@ -59,7 +72,7 @@
                 <label for="shape-semi">Semi Circles</label>
             </div>
             <div class="option">
-                <input type="checkbox" id="shape-circle" value="circle">
+                <input type="checkbox" id="shape-circle" value="circle" checked>
                 <label for="shape-circle">Circles</label>
             </div>
         </fieldset>
