@@ -1,0 +1,93 @@
+/* style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.generator-wrapper {
+    text-align: center;
+    background-color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 1600px;
+    width: 100%;
+}
+
+h1 {
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 25px;
+    color: #555;
+}
+
+/* NEW: Styles for the button group */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Adds space between buttons */
+    flex-wrap: wrap; /* Allows buttons to stack on small screens */
+}
+
+#generate-btn, #download-btn { /* Style both buttons together */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    outline: none;
+}
+
+#generate-btn {
+    background-color: #28a745; /* Green */
+}
+#generate-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+#generate-btn:active {
+    background-color: #1e7e34;
+    transform: translateY(0);
+}
+
+/* NEW: Style for the download button */
+#download-btn {
+    background-color: #007bff; /* Blue */
+}
+#download-btn:hover {
+    background-color: #0069d9;
+    transform: translateY(-2px);
+}
+#download-btn:active {
+    background-color: #0062cc;
+    transform: translateY(0);
+}
+
+#svg-container {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#generated-svg {
+    border: 1px solid #eee;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    background-color: #e0e0e0;
+    border-radius: 8px;
+    width: 100%;
+    height: auto;
+}
