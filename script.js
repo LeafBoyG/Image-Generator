@@ -1,15 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ---CONTROL ELEMENTS---
     const randomiseAllBtn = document.getElementById('randomise-all-btn');
     const randomiseShapesBtn = document.getElementById('randomise-shapes-btn');
     const randomiseColoursBtn = document.getElementById('randomise-colours-btn');
-    const downloadBtn = document.getElementById('download-btn');
+    const downloadPngBtn = document.getElementById('download-png-btn');
+    const exportSvgBtn = document.getElementById('export-svg-btn');
     const svgContainer = document.getElementById('svg-container');
     const themeRadios = document.querySelectorAll('#theme-options input[type="radio"]');
     const shapeCheckboxes = document.querySelectorAll('#shape-options input[type="checkbox"]');
     const colorPicker = document.getElementById('color-picker');
     const addColorBtn = document.getElementById('add-color-btn');
     const customThemeSwatches = document.getElementById('custom-theme-swatches');
+    const colsSlider = document.getElementById('cols-slider');
+    const colsValue = document.getElementById('cols-value');
+    const rowsSlider = document.getElementById('rows-slider');
+    const rowsValue = document.getElementById('rows-value');
+    const bgColorPicker = document.getElementById('bg-color-picker');
+    const densitySlider = document.getElementById('density-slider');
+    const densityValue = document.getElementById('density-value');
+    const strokeToggle = document.getElementById('stroke-toggle');
+    const strokeWidthGroup = document.getElementById('stroke-width-group');
+    const strokeWidthSlider = document.getElementById('stroke-width-slider');
+    const strokeWidthValue = document.getElementById('stroke-width-value');
 
+    // ---CONFIGURATION & STATE---
     let gridState = [];
     const THEMES = {
         codeEditor: ['#E91E63', '#cc0000', '#FF9800', '#0000DD', '#0066bb', '#336699', '#bb0066', '#22bb22'],
@@ -21,12 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
         neonGlow: ['#F72585', '#7209B7', '#3A0CA3', '#4361EE', '#4CC9F0', '#00F5D4'],
     };
     let customThemeColors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF'];
-    const BACKGROUND_COLOR = '#EFEFEF';
-    const SVG_WIDTH = 1584;
-    const SVG_HEIGHT = 396;
-    const GRID_COLS = 12;
-    const GRID_ROWS = 3;
-    const TILE_SIZE = SVG_WIDTH / GRID_COLS;
+    const TILE_SIZE = 100;
+    let GRID_COLS = 12;
+    let GRID_ROWS = 3;
+    let SVG_WIDTH = GRID_COLS * TILE_SIZE;
+    let SVG_HEIGHT = GRID_ROWS * TILE_SIZE;
+    let BACKGROUND_COLOR = '#EFEFEF';
+
+    // ---HELPER FUNCTIONS---
     const getActiveColors = () => {
         const selectedThemeRadio = document.querySelector('#theme-options input[type="radio"]:checked');
         const selectedThemeName = selectedThemeRadio ? selectedThemeRadio.value : 'codeEditor';
@@ -49,28 +65,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         return shapes;
     };
+
+    // ---CORE LOGIC---
     const randomiseAll = () => {
+        GRID_COLS = parseInt(colsSlider.value);
+        GRID_ROWS = parseInt(rowsSlider.value);
+        SVG_WIDTH = GRID_COLS * TILE_SIZE;
+        SVG_HEIGHT = GRID_ROWS * TILE_SIZE;
+        BACKGROUND_COLOR = bgColorPicker.value;
+        const density = parseFloat(densitySlider.value) / 100;
         const availableShapes = getAvailableShapes();
         const activeColors = getActiveColors();
         gridState = [];
- 
+
         if (availableShapes.length === 0 || activeColors.length === 0) {
-            renderGrid(); // Render an empty grid if no options are selected
-            return;
+            renderGrid(); return;
         }
         
-        const shuffledColors = activeColors.sort(() => 0.5 - Math.random());
-        const uniqueColors = [...new Set(shuffledColors)]; 
-        const generationPalette = uniqueColors.slice(0, 5);
+        const generationPalette = [...new Set(activeColors.sort(() => 0.5 - Math.random()))].slice(0, 5);
+        if (generationPalette.length === 0) { renderGrid(); return; }
 
         for (let i = 0; i < GRID_ROWS; i++) {
             gridState[i] = [];
             for (let j = 0; j < GRID_COLS; j++) {
-                gridState[i][j] = {
-                    shape: availableShapes[Math.floor(Math.random() * availableShapes.length)],
-                    color: generationPalette[Math.floor(Math.random() * generationPalette.length)],
-                    orientation: (i + j) % 4,
-                };
+                if (Math.random() < density) {
+                    gridState[i][j] = {
+                        shape: availableShapes[Math.floor(Math.random() * availableShapes.length)],
+                        color: generationPalette[Math.floor(Math.random() * generationPalette.length)],
+                        orientation: (i + j) % 4,
+                        gridIndex: i * GRID_COLS + j
+                    };
+                } else {
+                    gridState[i][j] = { shape: 'empty', gridIndex: i * GRID_COLS + j };
+                }
             }
         }
         renderGrid();
@@ -78,12 +105,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const randomiseShapes = () => {
         const availableShapes = getAvailableShapes();
+        const density = parseFloat(densitySlider.value) / 100;
         if (availableShapes.length === 0 || !gridState.length) return;
 
         gridState.forEach((row, i) => {
             row.forEach((tile, j) => {
-                tile.shape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
-                tile.orientation = (i + j) % 4;
+                if (Math.random() < density) {
+                    tile.shape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+                    tile.orientation = (i + j) % 4;
+                } else {
+                    tile.shape = 'empty';
+                }
             });
         });
         renderGrid();
@@ -93,46 +125,66 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeColors = getActiveColors();
         if (activeColors.length === 0 || !gridState.length) return;
         
-        const shuffledColors = activeColors.sort(() => 0.5 - Math.random());
-        const uniqueColors = [...new Set(shuffledColors)]; 
-        const generationPalette = uniqueColors.slice(0, 5);
+        const generationPalette = [...new Set(activeColors.sort(() => 0.5 - Math.random()))].slice(0, 5);
         if(generationPalette.length === 0) return;
 
         gridState.forEach(row => {
             row.forEach(tile => {
-                tile.color = generationPalette[Math.floor(Math.random() * generationPalette.length)];
+                if (tile.shape !== 'empty') {
+                    tile.color = generationPalette[Math.floor(Math.random() * generationPalette.length)];
+                }
             });
         });
         renderGrid();
     };
 
+    // ---RENDERING---
     const renderGrid = () => {
         svgContainer.innerHTML = '';
+
+        const isStrokeMode = strokeToggle.checked;
+        const strokeWidth = parseFloat(strokeWidthSlider.value);
+        const bleed = isStrokeMode ? strokeWidth / 2 : 0;
+        const viewBox = `${-bleed} ${-bleed} ${SVG_WIDTH + bleed * 2} ${SVG_HEIGHT + bleed * 2}`;
+        
         const svg = createSVGElement('svg', {
-            width: SVG_WIDTH, height: SVG_HEIGHT, viewBox: `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`, id: 'generated-svg'
+            width: SVG_WIDTH, height: SVG_HEIGHT, viewBox: viewBox, id: 'generated-svg'
         });
         svg.appendChild(createSVGElement('rect', { x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT, fill: BACKGROUND_COLOR }));
-
-        if (!gridState.length) {
-            svgContainer.appendChild(svg);
-            return;
-        }
-
-        gridState.forEach((row, i) => {
-            row.forEach((tile, j) => {
-                const tileX = j * TILE_SIZE;
-                const tileY = i * TILE_SIZE;
-                
-                switch (tile.shape) {
-                    case 'arc': svg.appendChild(createQuarterCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation)); break;
-                    case 'eye': svg.appendChild(createEyeShape(tileX, tileY, TILE_SIZE, tile.color, tile.orientation)); break;
-                    case 'semi': svg.appendChild(createSemiCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation)); break;
-                    case 'circle': svg.appendChild(createCircle(tileX, tileY, TILE_SIZE, tile.color)); break;
-                }
-            });
-        });
         svgContainer.appendChild(svg);
+
+        if (!gridState.length) return;
+
+        const tilesToDraw = gridState.flat().filter(tile => tile.shape !== 'empty');
+        if (tilesToDraw.length === 0) return;
+
+        const MAX_ANIMATION_DURATION = 800;
+        const perTileDelay = Math.min(15, MAX_ANIMATION_DURATION / tilesToDraw.length);
+
+        tilesToDraw.forEach((tile, index) => {
+            setTimeout(() => {
+                if (!document.body.contains(svg)) return;
+
+                const tileX = (tile.gridIndex % GRID_COLS) * TILE_SIZE;
+                const tileY = Math.floor(tile.gridIndex / GRID_COLS) * TILE_SIZE;
+                
+                let shapeElement;
+                switch (tile.shape) {
+                    case 'arc': shapeElement = createQuarterCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
+                    case 'eye': shapeElement = createEyeShape(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
+                    case 'semi': shapeElement = createSemiCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
+                    case 'circle': shapeElement = createCircle(tileX, tileY, TILE_SIZE, tile.color, isStrokeMode, strokeWidth); break;
+                }
+                
+                if (shapeElement) {
+                    shapeElement.classList.add('shape-animated');
+                    svg.appendChild(shapeElement);
+                }
+            }, index * perTileDelay);
+        });
     };
+    
+    // ---CUSTOM THEME---
     const renderSwatches = () => {
         customThemeSwatches.innerHTML = '';
         customThemeColors.forEach((color, index) => {
@@ -167,68 +219,81 @@ document.addEventListener('DOMContentLoaded', () => {
         if (customRadio && customRadio.checked) { randomiseColours(); }
     };
 
+    // ---SHAPE DRAWING---
     function createSVGElement(tag, attributes = {}) {
         const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
         for (const key in attributes) { element.setAttribute(key, attributes[key]); }
         return element;
     }
 
-    function createQuarterCircle(x, y, size, color, orientation) {
-        const path = createSVGElement('path', { fill: color });
-        const corner = orientation % 4;
+    function createStyledElement(tag, baseAttrs, color, isStrokeMode, strokeWidth) {
+        const attributes = { ...baseAttrs };
+        if (isStrokeMode) {
+            attributes.fill = 'none';
+            attributes.stroke = color;
+            attributes['stroke-width'] = strokeWidth;
+        } else {
+            attributes.fill = color;
+        }
+        return createSVGElement(tag, attributes);
+    }
+    
+    function createQuarterCircle(x, y, size, color, orientation, isStrokeMode, strokeWidth) {
         let d = "";
-        switch (corner) {
+        switch (orientation % 4) {
             case 0: d = `M${x},${y+size} A${size},${size} 0 0 1 ${x+size},${y} L${x+size},${y+size} Z`; break;
             case 1: d = `M${x+size},${y+size} A${size},${size} 0 0 0 ${x},${y} L${x},${y+size} Z`; break;
             case 2: d = `M${x+size},${y} A${size},${size} 0 0 1 ${x},${y+size} L${x},${y} Z`; break;
             case 3: d = `M${x},${y} A${size},${size} 0 0 0 ${x+size},${y+size} L${x+size},${y} Z`; break;
         }
-        path.setAttribute('d', d);
-        return path;
+        return createStyledElement('path', { d }, color, isStrokeMode, strokeWidth);
     }
     
-    function createCircle(x, y, size, color) {
-        return createSVGElement('circle', { cx: x + size / 2, cy: y + size / 2, r: size / 2, fill: color });
+    function createCircle(x, y, size, color, isStrokeMode, strokeWidth) {
+        const attrs = { cx: x + size / 2, cy: y + size / 2, r: size / 2 };
+        return createStyledElement('circle', attrs, color, isStrokeMode, strokeWidth);
     }
 
-    function createSemiCircle(x, y, size, color, orientation) {
-        const path = createSVGElement('path', { fill: color });
-        const side = orientation % 4;
+    function createSemiCircle(x, y, size, color, orientation, isStrokeMode, strokeWidth) {
         const stretchFactor = 1.5; 
         let d = "";
-        switch (side) {
+        switch (orientation % 4) {
             case 0: d = `M${x},${y+size} Q ${x + size/2},${y+size - size * stretchFactor} ${x+size},${y+size} Z`; break;
             case 1: d = `M${x},${y} Q ${x + size * stretchFactor},${y + size/2} ${x},${y+size} Z`; break;
             case 2: d = `M${x},${y} Q ${x + size/2},${y + size * stretchFactor} ${x+size},${y} Z`; break;
             case 3: d = `M${x+size},${y} Q ${x+size - size * stretchFactor},${y + size/2} ${x+size},${y+size} Z`; break;
         }
-        path.setAttribute('d', d);
-        return path;
+        return createStyledElement('path', { d }, color, isStrokeMode, strokeWidth);
     }
 
-    function createEyeShape(x, y, size, color, orientation) {
-        const path = createSVGElement('path', { fill: color });
-        const isDiagonal1 = orientation % 2 === 0;
+    function createEyeShape(x, y, size, color, orientation, isStrokeMode, strokeWidth) {
         let d = "";
-        if (isDiagonal1) {
+        if (orientation % 2 === 0) {
             d = `M${x},${y} A ${size},${size} 0 0 1 ${x+size},${y+size} A ${size},${size} 0 0 1 ${x},${y} Z`;
         } else {
             d = `M${x+size},${y} A ${size},${size} 0 0 0 ${x},${y+size} A ${size},${size} 0 0 0 ${x+size},${y} Z`;
         }
-        path.setAttribute('d', d);
-        return path;
+        return createStyledElement('path', { d }, color, isStrokeMode, strokeWidth);
     }
-    const downloadPattern = () => {
+    
+    // ---DOWNLOAD & EXPORT---
+    const downloadPNG = () => {
         const svg = document.getElementById('generated-svg');
         if (!svg) { console.error("No SVG found to download."); return; }
+        
+        const isStrokeMode = strokeToggle.checked;
+        const strokeWidth = parseFloat(strokeWidthSlider.value);
+        const bleed = isStrokeMode ? strokeWidth / 2 : 0;
+        
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svg);
         const canvas = document.createElement('canvas');
         const scale = 2;
-        canvas.width = SVG_WIDTH * scale;
-        canvas.height = SVG_HEIGHT * scale;
+        canvas.width = (SVG_WIDTH + bleed * 2) * scale;
+        canvas.height = (SVG_HEIGHT + bleed * 2) * scale;
         const ctx = canvas.getContext('2d');
         ctx.scale(scale, scale);
+        
         const img = new Image();
         const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         img.onload = function () {
@@ -242,11 +307,33 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         img.src = svgDataUrl;
     };
+    
+    const exportSVG = () => {
+        const svg = document.getElementById('generated-svg');
+        if (!svg) { console.error("No SVG found to export."); return; }
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svg);
+        if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+            svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        const blob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'generated-pattern.svg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
+    // ---EVENT LISTENERS---
     randomiseAllBtn.addEventListener('click', randomiseAll);
     randomiseShapesBtn.addEventListener('click', randomiseShapes);
     randomiseColoursBtn.addEventListener('click', randomiseColours);
-    downloadBtn.addEventListener('click', downloadPattern);
+    downloadPngBtn.addEventListener('click', downloadPNG);
+    exportSvgBtn.addEventListener('click', exportSVG);
+    
     themeRadios.forEach(radio => radio.addEventListener('change', randomiseAll));
     shapeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', randomiseAll));
     
@@ -257,6 +344,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    colsSlider.addEventListener('input', () => { colsValue.textContent = colsSlider.value; });
+    colsSlider.addEventListener('change', randomiseAll);
+    rowsSlider.addEventListener('input', () => { rowsValue.textContent = rowsSlider.value; });
+    rowsSlider.addEventListener('change', randomiseAll);
+    bgColorPicker.addEventListener('input', randomiseAll);
+    densitySlider.addEventListener('input', () => { densityValue.textContent = densitySlider.value; });
+    densitySlider.addEventListener('change', randomiseAll);
+    
+    strokeToggle.addEventListener('change', () => {
+        strokeWidthGroup.classList.toggle('hidden', !strokeToggle.checked);
+        renderGrid();
+    });
+    
+    strokeWidthSlider.addEventListener('input', () => { strokeWidthValue.textContent = strokeWidthSlider.value; });
+    strokeWidthSlider.addEventListener('change', renderGrid);
+    
+    // ---INITIAL SETUP---
     renderSwatches();
-    randomiseAll(); 
+    randomiseAll();
 });

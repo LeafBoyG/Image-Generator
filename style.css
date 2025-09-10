@@ -49,6 +49,31 @@ p {
     font-size: 0.9em;
 }
 
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-group label {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #555;
+}
+
+input[type="range"] {
+    width: 150px;
+}
+
+#bg-color-picker {
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
+    width: 40px; height: 40px;
+    background-color: transparent; border: none; cursor: pointer;
+}
+#bg-color-picker::-webkit-color-swatch { border-radius: 8px; border: 2px solid #ddd; }
+#bg-color-picker::-moz-color-swatch { border-radius: 8px; border: 2px solid #ddd; }
+
 .option {
     display: flex;
     align-items: center;
@@ -67,6 +92,40 @@ p {
     margin: 0;
 }
 
+.hidden {
+    display: none !important;
+}
+
+.toggle-switch {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 50px;
+    height: 28px;
+    background-color: #ccc;
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.2s;
+}
+.toggle-switch::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background-color: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 4px;
+    transition: transform 0.2s;
+}
+.toggle-switch:checked {
+    background-color: #28a745;
+}
+.toggle-switch:checked::before {
+    transform: translateX(21px);
+}
+
 .button-group {
     margin-top: 10px;
     display: flex;
@@ -75,7 +134,7 @@ p {
     flex-wrap: wrap;
 }
 
-#generate-btn, #download-btn {
+#randomise-all-btn, #randomise-shapes-btn, #randomise-colours-btn, #download-png-btn, #export-svg-btn {
     color: white;
     border: none;
     padding: 12px 25px;
@@ -86,38 +145,24 @@ p {
     transition: background-color 0.2s ease, transform 0.2s ease;
     outline: none;
 }
-
-#randomise-all-btn, #randomise-shapes-btn, #randomise-colours-btn, #download-btn {
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    outline: none;
-}
-
-#randomise-all-btn:hover, #randomise-shapes-btn:hover, #randomise-colours-btn:hover, #download-btn:hover {
+#randomise-all-btn:hover, #randomise-shapes-btn:hover, #randomise-colours-btn:hover, #download-png-btn:hover, #export-svg-btn:hover {
     transform: translateY(-2px);
 }
 
 #randomise-all-btn { background-color: #28a745; }
-
 #randomise-all-btn:hover { background-color: #218838; }
 
 #randomise-shapes-btn { background-color: #007bff; }
-
 #randomise-shapes-btn:hover { background-color: #0069d9; }
 
 #randomise-colours-btn { background-color: #E91E63; }
-
 #randomise-colours-btn:hover { background-color: #c2185b; }
 
-#download-btn { background-color: #6c757d; }
+#download-png-btn { background-color: #6c757d; }
+#download-png-btn:hover { background-color: #5a6268; }
 
-#download-btn:hover { background-color: #5a6268; }
+#export-svg-btn { background-color: #ffc107; color: #212529; }
+#export-svg-btn:hover { background-color: #e0a800; }
 
 .custom-theme-controls {
     display: flex;
@@ -170,10 +215,27 @@ p {
 #svg-container {
     margin-top: 30px; display: flex;
     justify-content: center; align-items: center;
+    overflow-x: auto;
 }
 
 #generated-svg {
     border: 1px solid #eee; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     background-color: #e0e0e0; border-radius: 8px;
-    width: 100%; height: auto;
+    max-width: 100%;
+    height: auto;
+}
+
+@keyframes fadeInShape {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.shape-animated {
+    animation: fadeInShape 0.4s ease-out forwards;
 }

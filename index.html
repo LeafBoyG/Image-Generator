@@ -12,6 +12,38 @@
         <h1>SVG Shape Generator</h1>
         <p>Select your options and click the button to generate new geometric patterns.</p>
         
+        <fieldset class="options-fieldset" id="layout-controls">
+            <legend>Layout Controls</legend>
+            <div class="control-group">
+                <label for="cols-slider">Columns: <span id="cols-value">12</span></label>
+                <input type="range" id="cols-slider" min="2" max="40" value="12">
+            </div>
+            <div class="control-group">
+                <label for="rows-slider">Rows: <span id="rows-value">3</span></label>
+                <input type="range" id="rows-slider" min="1" max="20" value="3">
+            </div>
+            <div class="control-group">
+                <label for="bg-color-picker">Background:</label>
+                <input type="color" id="bg-color-picker" value="#EFEFEF">
+            </div>
+        </fieldset>
+
+        <fieldset class="options-fieldset" id="style-controls">
+            <legend>Style Controls</legend>
+            <div class="control-group">
+                <label for="density-slider">Density: <span id="density-value">100</span>%</label>
+                <input type="range" id="density-slider" min="0" max="100" value="100">
+            </div>
+            <div class="control-group">
+                <label for="stroke-toggle">Outline Mode</label>
+                <input type="checkbox" id="stroke-toggle" class="toggle-switch">
+            </div>
+            <div class="control-group hidden" id="stroke-width-group">
+                <label for="stroke-width-slider">Outline Width: <span id="stroke-width-value">4</span></label>
+                <input type="range" id="stroke-width-slider" min="1" max="20" value="4">
+            </div>
+        </fieldset>
+
         <fieldset class="options-fieldset" id="theme-options">
             <legend>Color Theme</legend>
             <div class="option">
@@ -77,11 +109,12 @@
             </div>
         </fieldset>
 
-       <div class="button-group">
+        <div class="button-group">
             <button id="randomise-all-btn">Randomise All</button>
             <button id="randomise-shapes-btn">Randomise Shapes</button>
             <button id="randomise-colours-btn">Randomise Colours</button>
-            <button id="download-btn">Download Image</button>
+            <button id="download-png-btn">Download PNG</button>
+            <button id="export-svg-btn">Export SVG</button>
         </div>
         
         <div id="svg-container"></div>
