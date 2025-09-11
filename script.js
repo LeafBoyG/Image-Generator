@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
         panelOverlay.classList.add('is-visible');
         document.body.classList.add('panel-open');
     };
-
     const closePanel = () => {
         controlsPanel.classList.remove('is-open');
         panelOverlay.classList.remove('is-visible');
@@ -69,15 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelIcon: { enabled: true },
         }
     });
-
     tour.addStep({
         title: 'Welcome!',
         text: 'Welcome to the SVG Shape Generator! This quick tour will show you the main features.',
         buttons: [{ text: 'Next', action: tour.next }]
     });
     tour.addStep({
-        title: 'The Canvas',
-        text: 'This is where your art is generated. You can also swipe on it to quickly change shapes or colours, or double-tap to randomise everything!',
+        title: 'The Interactive Canvas',
+        text: `This is where your art is generated. It's also interactive! Try these actions directly on the artwork:
+               <ul>
+                 <li><b>Click a single shape</b> to change just that one tile.</li>
+                 <li><b>Swipe Left/Right</b> to randomise all shapes.</li>
+                 <li><b>Swipe Up/Down</b> to randomise all colours.</li>
+                 <li><b>Double-Tap</b> to randomise everything!</li>
+               </ul>`,
         attachTo: { element: '#svg-container', on: 'top' },
         buttons: [{ text: 'Back', action: tour.back }, { text: 'Next', action: tour.next }]
     });
@@ -86,32 +90,22 @@ document.addEventListener('DOMContentLoaded', () => {
         text: 'Tap this button to open the main controls panel where you can fine-tune your pattern.',
         attachTo: { element: '#open-controls-btn', on: 'bottom' },
         buttons: [{ text: 'Back', action: tour.back }, { text: 'Next', action: tour.next }],
-        beforeShowPromise: () => new Promise(resolve => {
-            closePanel();
-            setTimeout(resolve, 100);
-        })
+        beforeShowPromise: () => new Promise(resolve => { closePanel(); setTimeout(resolve, 100); })
     });
     tour.addStep({
         title: 'Choose Your Style',
         text: 'Inside the panel, you can control the grid layout, switch to outline mode, select colour themes, create a custom theme, and pick your favourite shapes!',
         attachTo: { element: '#controls-panel', on: 'right' },
         buttons: [{ text: 'Back', action: tour.back }, { text: 'Next', action: tour.next }],
-        beforeShowPromise: () => new Promise(resolve => {
-            openPanel();
-            setTimeout(resolve, 400);
-        })
+        beforeShowPromise: () => new Promise(resolve => { openPanel(); setTimeout(resolve, 400); })
     });
     tour.addStep({
         title: 'Randomise & Download',
-        text: 'Use these buttons to randomise different parts of your pattern, then download it as a high-quality PNG or a scalable SVG file.',
+        text: 'Use these buttons for more randomisation control, then download your creation as a high-quality PNG or a scalable SVG file.',
         attachTo: { element: '.button-group', on: 'top' },
         buttons: [{ text: 'Back', action: tour.back }, { text: 'Done', action: tour.complete }],
-        beforeShowPromise: () => new Promise(resolve => {
-            closePanel();
-            setTimeout(resolve, 400);
-        })
+        beforeShowPromise: () => new Promise(resolve => { closePanel(); setTimeout(resolve, 400); })
     });
-    
     tour.on('complete', () => localStorage.setItem('hasSeenTour', 'true'));
     tour.on('cancel', () => localStorage.setItem('hasSeenTour', 'true'));
 
@@ -119,18 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const getActiveColors = () => {
         const selectedThemeRadio = document.querySelector('#theme-options input[type="radio"]:checked');
         const selectedThemeName = selectedThemeRadio ? selectedThemeRadio.value : 'codeEditor';
-        let activeColors = [];
-        if (selectedThemeName === 'custom') {
-            activeColors = customThemeColors;
-        } else {
-            activeColors = THEMES[selectedThemeName];
-        }
-        if (!activeColors || activeColors.length === 0) {
-            activeColors = THEMES.codeEditor;
-        }
-        return activeColors;
+        let activeColors = (selectedThemeName === 'custom') ? customThemeColors : THEMES[selectedThemeName];
+        return (!activeColors || activeColors.length === 0) ? THEMES.codeEditor : activeColors;
     };
-    
     const getAvailableShapes = () => {
         const shapes = [];
         shapeCheckboxes.forEach(checkbox => {
@@ -151,56 +136,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeColors = getActiveColors();
         gridState = [];
 
-        if (availableShapes.length === 0 || activeColors.length === 0) {
-            renderGrid(); return;
-        }
-        
+        if (availableShapes.length === 0 || activeColors.length === 0) { renderGrid(true); return; }
         const generationPalette = [...new Set(activeColors.sort(() => 0.5 - Math.random()))].slice(0, 5);
-        if (generationPalette.length === 0) { renderGrid(); return; }
+        if (generationPalette.length === 0) { renderGrid(true); return; }
 
         for (let i = 0; i < GRID_ROWS; i++) {
             gridState[i] = [];
             for (let j = 0; j < GRID_COLS; j++) {
-                if (Math.random() < density) {
-                    gridState[i][j] = {
-                        shape: availableShapes[Math.floor(Math.random() * availableShapes.length)],
-                        color: generationPalette[Math.floor(Math.random() * generationPalette.length)],
-                        orientation: (i + j) % 4,
-                        gridIndex: i * GRID_COLS + j
-                    };
-                } else {
-                    gridState[i][j] = { shape: 'empty', gridIndex: i * GRID_COLS + j };
-                }
+                gridState[i][j] = (Math.random() < density) ? {
+                    shape: availableShapes[Math.floor(Math.random() * availableShapes.length)],
+                    color: generationPalette[Math.floor(Math.random() * generationPalette.length)],
+                    orientation: (i + j) % 4,
+                    gridIndex: i * GRID_COLS + j
+                } : { shape: 'empty', gridIndex: i * GRID_COLS + j };
             }
         }
-        renderGrid();
+        renderGrid(true);
     };
 
     const randomiseShapes = () => {
         const availableShapes = getAvailableShapes();
         const density = parseFloat(densitySlider.value) / 100;
         if (availableShapes.length === 0 || !gridState.length) return;
-
         gridState.forEach((row, i) => {
             row.forEach((tile, j) => {
-                if (Math.random() < density) {
-                    tile.shape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
-                    tile.orientation = (i + j) % 4;
-                } else {
-                    tile.shape = 'empty';
-                }
+                tile.shape = (Math.random() < density) ? availableShapes[Math.floor(Math.random() * availableShapes.length)] : 'empty';
+                tile.orientation = (i + j) % 4;
             });
         });
-        renderGrid();
+        renderGrid(true);
     };
 
     const randomiseColours = () => {
         const activeColors = getActiveColors();
         if (activeColors.length === 0 || !gridState.length) return;
-        
         const generationPalette = [...new Set(activeColors.sort(() => 0.5 - Math.random()))].slice(0, 5);
         if(generationPalette.length === 0) return;
-
         gridState.forEach(row => {
             row.forEach(tile => {
                 if (tile.shape !== 'empty') {
@@ -208,53 +179,72 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        renderGrid();
+        renderGrid(false);
+    };
+
+    const rerollTile = (rowIndex, colIndex) => {
+        const availableShapes = getAvailableShapes();
+        const activeColors = getActiveColors();
+        if (availableShapes.length === 0 || activeColors.length === 0 || !gridState[rowIndex]?.[colIndex]) return;
+        const generationPalette = [...new Set(activeColors.sort(() => 0.5 - Math.random()))].slice(0, 5);
+        if (generationPalette.length === 0) return;
+        const tile = gridState[rowIndex][colIndex];
+        tile.shape = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+        tile.color = generationPalette[Math.floor(Math.random() * generationPalette.length)];
+        renderGrid(false);
     };
 
     // ---RENDERING---
-    const renderGrid = () => {
+    const renderGrid = (animate = false) => {
         svgContainer.innerHTML = '';
-
         const isStrokeMode = strokeToggle.checked;
         const strokeWidth = parseFloat(strokeWidthSlider.value);
         const bleed = isStrokeMode ? strokeWidth / 2 : 0;
         const viewBox = `${-bleed} ${-bleed} ${SVG_WIDTH + bleed * 2} ${SVG_HEIGHT + bleed * 2}`;
-        
         const svg = createSVGElement('svg', {
             width: SVG_WIDTH, height: SVG_HEIGHT, viewBox: viewBox, id: 'generated-svg'
         });
         svg.appendChild(createSVGElement('rect', { x: 0, y: 0, width: SVG_WIDTH, height: SVG_HEIGHT, fill: BACKGROUND_COLOR }));
         svgContainer.appendChild(svg);
-
         if (!gridState.length) return;
+
+        const drawShape = (tile) => {
+            if (tile.shape === 'empty') return null;
+            const tileX = (tile.gridIndex % GRID_COLS) * TILE_SIZE;
+            const tileY = Math.floor(tile.gridIndex / GRID_COLS) * TILE_SIZE;
+            let shapeElement;
+            switch (tile.shape) {
+                case 'arc': shapeElement = createQuarterCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
+                case 'eye': shapeElement = createEyeShape(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
+                case 'semi': shapeElement = createSemiCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
+                case 'circle': shapeElement = createCircle(tileX, tileY, TILE_SIZE, tile.color, isStrokeMode, strokeWidth); break;
+            }
+            if (shapeElement) {
+                const rowIndex = Math.floor(tile.gridIndex / GRID_COLS);
+                const colIndex = tile.gridIndex % GRID_COLS;
+                shapeElement.addEventListener('click', () => rerollTile(rowIndex, colIndex));
+                shapeElement.style.cursor = 'pointer';
+                svg.appendChild(shapeElement);
+            }
+            return shapeElement;
+        };
 
         const tilesToDraw = gridState.flat().filter(tile => tile.shape !== 'empty');
         if (tilesToDraw.length === 0) return;
 
-        const MAX_ANIMATION_DURATION = 800;
-        const perTileDelay = Math.min(15, MAX_ANIMATION_DURATION / tilesToDraw.length);
-
-        tilesToDraw.forEach((tile, index) => {
-            setTimeout(() => {
-                if (!document.body.contains(svg)) return;
-
-                const tileX = (tile.gridIndex % GRID_COLS) * TILE_SIZE;
-                const tileY = Math.floor(tile.gridIndex / GRID_COLS) * TILE_SIZE;
-                
-                let shapeElement;
-                switch (tile.shape) {
-                    case 'arc': shapeElement = createQuarterCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
-                    case 'eye': shapeElement = createEyeShape(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
-                    case 'semi': shapeElement = createSemiCircle(tileX, tileY, TILE_SIZE, tile.color, tile.orientation, isStrokeMode, strokeWidth); break;
-                    case 'circle': shapeElement = createCircle(tileX, tileY, TILE_SIZE, tile.color, isStrokeMode, strokeWidth); break;
-                }
-                
-                if (shapeElement) {
-                    shapeElement.classList.add('shape-animated');
-                    svg.appendChild(shapeElement);
-                }
-            }, index * perTileDelay);
-        });
+        if (animate) {
+            const MAX_ANIMATION_DURATION = 800;
+            const perTileDelay = Math.min(15, MAX_ANIMATION_DURATION / tilesToDraw.length);
+            tilesToDraw.forEach((tile, index) => {
+                setTimeout(() => {
+                    if (!document.body.contains(svg)) return;
+                    const el = drawShape(tile);
+                    if (el) el.classList.add('shape-animated');
+                }, index * perTileDelay);
+            });
+        } else {
+            tilesToDraw.forEach(drawShape);
+        }
     };
     
     // ---CUSTOM THEME---
@@ -273,23 +263,21 @@ document.addEventListener('DOMContentLoaded', () => {
             customThemeSwatches.appendChild(swatch);
         });
     };
-
     const addColor = () => {
-        if (customThemeColors.length >= 10) { alert("You can have a maximum of 10 custom colors."); return; }
+        if (customThemeColors.length >= 10) { alert("Max 10 custom colors."); return; }
         const newColor = colorPicker.value;
         if (!customThemeColors.includes(newColor)) {
             customThemeColors.push(newColor);
             renderSwatches();
             const customRadio = document.querySelector('#theme-custom');
-            if (customRadio && customRadio.checked) { randomiseColours(); }
+            if (customRadio?.checked) { randomiseColours(); }
         }
     };
-
     const removeColor = (index) => {
         customThemeColors.splice(index, 1);
         renderSwatches();
         const customRadio = document.querySelector('#theme-custom');
-        if (customRadio && customRadio.checked) { randomiseColours(); }
+        if (customRadio?.checked) { randomiseColours(); }
     };
 
     // ---SHAPE DRAWING---
@@ -298,66 +286,50 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const key in attributes) { element.setAttribute(key, attributes[key]); }
         return element;
     }
-
     function createStyledElement(tag, baseAttrs, color, isStrokeMode, strokeWidth) {
         const attributes = { ...baseAttrs };
-        if (isStrokeMode) {
-            attributes.fill = 'none';
-            attributes.stroke = color;
-            attributes['stroke-width'] = strokeWidth;
-        } else {
-            attributes.fill = color;
-        }
+        attributes[isStrokeMode ? 'stroke' : 'fill'] = color;
+        attributes[isStrokeMode ? 'fill' : 'stroke'] = 'none';
+        if (isStrokeMode) attributes['stroke-width'] = strokeWidth;
         return createSVGElement(tag, attributes);
     }
-    
-    function createQuarterCircle(x, y, size, color, orientation, isStrokeMode, strokeWidth) {
+    function createQuarterCircle(x, y, size, color, o, s, sw) {
         let d = "";
-        switch (orientation % 4) {
+        switch (o % 4) {
             case 0: d = `M${x},${y+size} A${size},${size} 0 0 1 ${x+size},${y} L${x+size},${y+size} Z`; break;
             case 1: d = `M${x+size},${y+size} A${size},${size} 0 0 0 ${x},${y} L${x},${y+size} Z`; break;
             case 2: d = `M${x+size},${y} A${size},${size} 0 0 1 ${x},${y+size} L${x},${y} Z`; break;
             case 3: d = `M${x},${y} A${size},${size} 0 0 0 ${x+size},${y+size} L${x+size},${y} Z`; break;
         }
-        return createStyledElement('path', { d }, color, isStrokeMode, strokeWidth);
+        return createStyledElement('path', { d }, color, s, sw);
     }
-    
-    function createCircle(x, y, size, color, isStrokeMode, strokeWidth) {
+    function createCircle(x, y, size, color, s, sw) {
         const attrs = { cx: x + size / 2, cy: y + size / 2, r: size / 2 };
-        return createStyledElement('circle', attrs, color, isStrokeMode, strokeWidth);
+        return createStyledElement('circle', attrs, color, s, sw);
     }
-
-    function createSemiCircle(x, y, size, color, orientation, isStrokeMode, strokeWidth) {
-        const stretchFactor = 1.5; 
+    function createSemiCircle(x, y, size, color, o, s, sw) {
+        const sf = 1.5; 
         let d = "";
-        switch (orientation % 4) {
-            case 0: d = `M${x},${y+size} Q ${x + size/2},${y+size - size * stretchFactor} ${x+size},${y+size} Z`; break;
-            case 1: d = `M${x},${y} Q ${x + size * stretchFactor},${y + size/2} ${x},${y+size} Z`; break;
-            case 2: d = `M${x},${y} Q ${x + size/2},${y + size * stretchFactor} ${x+size},${y} Z`; break;
-            case 3: d = `M${x+size},${y} Q ${x+size - size * stretchFactor},${y + size/2} ${x+size},${y+size} Z`; break;
+        switch (o % 4) {
+            case 0: d = `M${x},${y+size} Q ${x + size/2},${y+size - size * sf} ${x+size},${y+size} Z`; break;
+            case 1: d = `M${x},${y} Q ${x + size * sf},${y + size/2} ${x},${y+size} Z`; break;
+            case 2: d = `M${x},${y} Q ${x + size/2},${y + size * sf} ${x+size},${y} Z`; break;
+            case 3: d = `M${x+size},${y} Q ${x+size - size * sf},${y + size/2} ${x+size},${y+size} Z`; break;
         }
-        return createStyledElement('path', { d }, color, isStrokeMode, strokeWidth);
+        return createStyledElement('path', { d }, color, s, sw);
     }
-
-    function createEyeShape(x, y, size, color, orientation, isStrokeMode, strokeWidth) {
-        let d = "";
-        if (orientation % 2 === 0) {
-            d = `M${x},${y} A ${size},${size} 0 0 1 ${x+size},${y+size} A ${size},${size} 0 0 1 ${x},${y} Z`;
-        } else {
-            d = `M${x+size},${y} A ${size},${size} 0 0 0 ${x},${y+size} A ${size},${size} 0 0 0 ${x+size},${y} Z`;
-        }
-        return createStyledElement('path', { d }, color, isStrokeMode, strokeWidth);
+    function createEyeShape(x, y, size, color, o, s, sw) {
+        let d = (o % 2 === 0) ?
+            `M${x},${y} A ${size},${size} 0 0 1 ${x+size},${y+size} A ${size},${size} 0 0 1 ${x},${y} Z` :
+            `M${x+size},${y} A ${size},${size} 0 0 0 ${x},${y+size} A ${size},${size} 0 0 0 ${x+size},${y} Z`;
+        return createStyledElement('path', { d }, color, s, sw);
     }
     
     // ---DOWNLOAD & EXPORT---
     const downloadPNG = () => {
         const svg = document.getElementById('generated-svg');
-        if (!svg) { console.error("No SVG found to download."); return; }
-        
-        const isStrokeMode = strokeToggle.checked;
-        const strokeWidth = parseFloat(strokeWidthSlider.value);
-        const bleed = isStrokeMode ? strokeWidth / 2 : 0;
-        
+        if (!svg) { console.error("No SVG found."); return; }
+        const bleed = strokeToggle.checked ? parseFloat(strokeWidthSlider.value) / 2 : 0;
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svg);
         const canvas = document.createElement('canvas');
@@ -366,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.height = (SVG_HEIGHT + bleed * 2) * scale;
         const ctx = canvas.getContext('2d');
         ctx.scale(scale, scale);
-        
         const img = new Image();
         const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         img.onload = function () {
@@ -380,10 +351,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         img.src = svgDataUrl;
     };
-    
     const exportSVG = () => {
         const svg = document.getElementById('generated-svg');
-        if (!svg) { console.error("No SVG found to export."); return; }
+        if (!svg) { console.error("No SVG found."); return; }
         const serializer = new XMLSerializer();
         let svgString = serializer.serializeToString(svg);
         if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
@@ -413,17 +383,14 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('hasSeenTour');
         tour.start();
     });
-    
     themeRadios.forEach(radio => radio.addEventListener('change', randomiseAll));
     shapeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', randomiseAll));
-    
     addColorBtn.addEventListener('click', addColor);
     customThemeSwatches.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-swatch')) {
             removeColor(e.target.dataset.index);
         }
     });
-
     colsSlider.addEventListener('input', () => { colsValue.textContent = colsSlider.value; });
     colsSlider.addEventListener('change', randomiseAll);
     rowsSlider.addEventListener('input', () => { rowsValue.textContent = rowsSlider.value; });
@@ -431,68 +398,48 @@ document.addEventListener('DOMContentLoaded', () => {
     bgColorPicker.addEventListener('input', randomiseAll);
     densitySlider.addEventListener('input', () => { densityValue.textContent = densitySlider.value; });
     densitySlider.addEventListener('change', randomiseAll);
-    
     strokeToggle.addEventListener('change', () => {
         strokeWidthGroup.classList.toggle('hidden', !strokeToggle.checked);
-        renderGrid();
+        renderGrid(false);
     });
-    
     strokeWidthSlider.addEventListener('input', () => { strokeWidthValue.textContent = strokeWidthSlider.value; });
-    strokeWidthSlider.addEventListener('change', renderGrid);
-
+    strokeWidthSlider.addEventListener('change', renderGrid(false));
     controlsPanel.addEventListener('click', (e) => {
         if (!e.target.classList.contains('stepper-btn')) return;
         const targetSliderId = e.target.dataset.target;
         const step = parseInt(e.target.dataset.step, 10);
         const slider = document.getElementById(targetSliderId);
-
         if (slider) {
-            const min = parseInt(slider.min, 10);
-            const max = parseInt(slider.max, 10);
-            let currentValue = parseInt(slider.value, 10);
-            
-            let newValue = currentValue + step;
+            const min = parseInt(slider.min, 10), max = parseInt(slider.max, 10);
+            let newValue = parseInt(slider.value, 10) + step;
             if (newValue < min) newValue = min;
             if (newValue > max) newValue = max;
-
             slider.value = newValue;
             slider.dispatchEvent(new Event('input', { bubbles: true }));
             slider.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
-
-    let touchstartX = 0;
-    let touchstartY = 0;
-    let lastTap = 0;
+    
+    // ---GESTURE CONTROLS---
+    let touchstartX = 0, touchstartY = 0, lastTap = 0;
     const swipeThreshold = 50;
-
     svgContainer.addEventListener('touchstart', (e) => {
         touchstartX = e.changedTouches[0].screenX;
         touchstartY = e.changedTouches[0].screenY;
     }, { passive: true });
-
     svgContainer.addEventListener('touchend', (e) => {
         const touchendX = e.changedTouches[0].screenX;
         const touchendY = e.changedTouches[0].screenY;
-        const dX = touchendX - touchstartX;
-        const dY = touchendY - touchstartY;
-
+        const dX = touchendX - touchstartX, dY = touchendY - touchstartY;
         if (Math.abs(dX) > swipeThreshold || Math.abs(dY) > swipeThreshold) {
-            if (Math.abs(dX) > Math.abs(dY)) {
-                randomiseShapes();
-            } else {
-                randomiseColours();
-            }
+            (Math.abs(dX) > Math.abs(dY)) ? randomiseShapes() : randomiseColours();
         } else {
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
-            if (tapLength < 300 && tapLength > 0) {
-                randomiseAll();
-            }
+            if (tapLength < 300 && tapLength > 0) { randomiseAll(); }
             lastTap = currentTime;
         }
     }, { passive: true });
-
     svgContainer.addEventListener('dblclick', randomiseAll);
     
     // ---INITIAL SETUP---
@@ -500,8 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
     randomiseAll();
 
     if (!localStorage.getItem('hasSeenTour')) {
-        setTimeout(() => {
-            tour.start();
-        }, 1000);
+        setTimeout(() => { tour.start(); }, 1000);
     }
 });
