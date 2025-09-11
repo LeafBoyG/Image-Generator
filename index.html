@@ -4,122 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVG Shape Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/css/shepherd.css"/>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="generator-wrapper">
-        <h1>SVG Shape Generator</h1>
-        <p>Select your options and click the button to generate new geometric patterns.</p>
-        
-        <fieldset class="options-fieldset" id="layout-controls">
-            <legend>Layout Controls</legend>
-            <div class="control-group">
-                <label for="cols-slider">Columns: <span id="cols-value">12</span></label>
-                <input type="range" id="cols-slider" min="2" max="40" value="12">
+    <aside id="controls-panel" class="controls-panel">
+        <div class="panel-header">
+            <h2>Controls</h2>
+            <div>
+                <button id="show-tour-btn" class="help-btn">?</button>
+                <button id="close-controls-btn" class="close-btn">&times;</button>
             </div>
-            <div class="control-group">
-                <label for="rows-slider">Rows: <span id="rows-value">3</span></label>
-                <input type="range" id="rows-slider" min="1" max="20" value="3">
-            </div>
-            <div class="control-group">
-                <label for="bg-color-picker">Background:</label>
-                <input type="color" id="bg-color-picker" value="#EFEFEF">
-            </div>
-        </fieldset>
-
-        <fieldset class="options-fieldset" id="style-controls">
-            <legend>Style Controls</legend>
-            <div class="control-group">
-                <label for="density-slider">Density: <span id="density-value">100</span>%</label>
-                <input type="range" id="density-slider" min="0" max="100" value="100">
-            </div>
-            <div class="control-group">
-                <label for="stroke-toggle">Outline Mode</label>
-                <input type="checkbox" id="stroke-toggle" class="toggle-switch">
-            </div>
-            <div class="control-group hidden" id="stroke-width-group">
-                <label for="stroke-width-slider">Outline Width: <span id="stroke-width-value">4</span></label>
-                <input type="range" id="stroke-width-slider" min="1" max="20" value="4">
-            </div>
-        </fieldset>
-
-        <fieldset class="options-fieldset" id="theme-options">
-            <legend>Color Theme</legend>
-            <div class="option">
-                <input type="radio" id="theme-codeEditor" name="theme" value="codeEditor" checked>
-                <label for="theme-codeEditor">Code Editor</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-sunset" name="theme" value="sunset">
-                <label for="theme-sunset">Sunset</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-oceanDeep" name="theme" value="oceanDeep">
-                <label for="theme-oceanDeep">Ocean Deep</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-forestFloor" name="theme" value="forestFloor">
-                <label for="theme-forestFloor">Forest Floor</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-monochrome" name="theme" value="monochrome">
-                <label for="theme-monochrome">Monochrome</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-pastelDream" name="theme" value="pastelDream">
-                <label for="theme-pastelDream">Pastel Dream</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-neonGlow" name="theme" value="neonGlow">
-                <label for="theme-neonGlow">Neon Glow</label>
-            </div>
-            <div class="option">
-                <input type="radio" id="theme-custom" name="theme" value="custom">
-                <label for="theme-custom">Custom</label>
-            </div>
-        </fieldset>
-
-        <fieldset class="options-fieldset" id="custom-theme-creator">
-            <legend>Custom Theme Creator</legend>
-            <div class="custom-theme-controls">
-                <input type="color" id="color-picker" value="#fd7e14">
-                <button id="add-color-btn">Add Color</button>
-            </div>
-            <div id="custom-theme-swatches"></div>
-        </fieldset>
-
-        <fieldset class="options-fieldset" id="shape-options">
-            <legend>Shape Options</legend>
-            <div class="option">
-                <input type="checkbox" id="shape-arc" value="arc" checked>
-                <label for="shape-arc">Quarter Circles</label>
-            </div>
-            <div class="option">
-                <input type="checkbox" id="shape-eye" value="eye" checked>
-                <label for="shape-eye">Eye Shapes</label>
-            </div>
-            <div class="option">
-                <input type="checkbox" id="shape-semi" value="semi" checked>
-                <label for="shape-semi">Semi Circles</label>
-            </div>
-            <div class="option">
-                <input type="checkbox" id="shape-circle" value="circle" checked>
-                <label for="shape-circle">Circles</label>
-            </div>
-        </fieldset>
-
-        <div class="button-group">
-            <button id="randomise-all-btn">Randomise All</button>
-            <button id="randomise-shapes-btn">Randomise Shapes</button>
-            <button id="randomise-colours-btn">Randomise Colours</button>
-            <button id="download-png-btn">Download PNG</button>
-            <button id="export-svg-btn">Export SVG</button>
         </div>
-        
-        <div id="svg-container"></div>
-    </div>
+        <div class="panel-content">
+            <details class="options-fieldset" id="layout-controls" open>
+                <summary>Layout Controls</summary>
+                <div class="control-group">
+                    <label for="cols-slider">Columns: <span id="cols-value">12</span></label>
+                    <div class="slider-container">
+                        <button class="stepper-btn" data-target="cols-slider" data-step="-1">-</button>
+                        <input type="range" id="cols-slider" min="2" max="40" value="12">
+                        <button class="stepper-btn" data-target="cols-slider" data-step="1">+</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="rows-slider">Rows: <span id="rows-value">3</span></label>
+                    <div class="slider-container">
+                        <button class="stepper-btn" data-target="rows-slider" data-step="-1">-</button>
+                        <input type="range" id="rows-slider" min="1" max="20" value="3">
+                        <button class="stepper-btn" data-target="rows-slider" data-step="1">+</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="bg-color-picker">Background:</label>
+                    <input type="color" id="bg-color-picker" value="#EFEFEF">
+                </div>
+            </details>
+    
+            <details class="options-fieldset" id="style-controls">
+                <summary>Style Controls</summary>
+                <div class="control-group">
+                    <label for="density-slider">Density: <span id="density-value">100</span>%</label>
+                    <div class="slider-container">
+                        <button class="stepper-btn" data-target="density-slider" data-step="-5">-</button>
+                        <input type="range" id="density-slider" min="0" max="100" value="100" step="5">
+                        <button class="stepper-btn" data-target="density-slider" data-step="5">+</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="stroke-toggle">Outline Mode</label>
+                    <input type="checkbox" id="stroke-toggle" class="toggle-switch">
+                </div>
+                <div class="control-group hidden" id="stroke-width-group">
+                    <label for="stroke-width-slider">Outline Width: <span id="stroke-width-value">4</span></label>
+                    <div class="slider-container">
+                        <button class="stepper-btn" data-target="stroke-width-slider" data-step="-1">-</button>
+                        <input type="range" id="stroke-width-slider" min="1" max="20" value="4">
+                        <button class="stepper-btn" data-target="stroke-width-slider" data-step="1">+</button>
+                    </div>
+                </div>
+            </details>
+    
+            <details class="options-fieldset" id="theme-options">
+                <summary>Color Theme</summary>
+                <div class="option">
+                    <input type="radio" id="theme-codeEditor" name="theme" value="codeEditor" checked>
+                    <label for="theme-codeEditor">Code Editor</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-sunset" name="theme" value="sunset">
+                    <label for="theme-sunset">Sunset</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-oceanDeep" name="theme" value="oceanDeep">
+                    <label for="theme-oceanDeep">Ocean Deep</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-forestFloor" name="theme" value="forestFloor">
+                    <label for="theme-forestFloor">Forest Floor</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-monochrome" name="theme" value="monochrome">
+                    <label for="theme-monochrome">Monochrome</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-pastelDream" name="theme" value="pastelDream">
+                    <label for="theme-pastelDream">Pastel Dream</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-neonGlow" name="theme" value="neonGlow">
+                    <label for="theme-neonGlow">Neon Glow</label>
+                </div>
+                <div class="option">
+                    <input type="radio" id="theme-custom" name="theme" value="custom">
+                    <label for="theme-custom">Custom</label>
+                </div>
+            </details>
+    
+            <details class="options-fieldset" id="custom-theme-creator">
+                <summary>Custom Theme Creator</summary>
+                <div class="custom-theme-controls">
+                    <input type="color" id="color-picker" value="#fd7e14">
+                    <button id="add-color-btn">Add Color</button>
+                </div>
+                <div id="custom-theme-swatches"></div>
+            </details>
+    
+            <details class="options-fieldset" id="shape-options">
+                <summary>Shape Options</summary>
+                <div class="option">
+                    <input type="checkbox" id="shape-arc" value="arc" checked>
+                    <label for="shape-arc">Quarter Circles</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="shape-eye" value="eye" checked>
+                    <label for="shape-eye">Eye Shapes</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="shape-semi" value="semi" checked>
+                    <label for="shape-semi">Semi Circles</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="shape-circle" value="circle" checked>
+                    <label for="shape-circle">Circles</label>
+                </div>
+            </details>
+        </div>
+    </aside>
 
+    <div id="panel-overlay" class="panel-overlay"></div>
+
+    <main id="main-content" class="main-content">
+        <div class="generator-wrapper">
+            <h1>SVG Shape Generator</h1>
+            <p>Select your options and click the button to generate new geometric patterns.</p>
+            
+            <div class="button-group">
+                <button id="open-controls-btn">⚙️ Settings</button>
+                <button id="randomise-all-btn">Randomise All</button>
+                <button id="randomise-shapes-btn">Randomise Shapes</button>
+                <button id="randomise-colours-btn">Randomise Colours</button>
+                <button id="download-png-btn">Download PNG</button>
+                <button id="export-svg-btn">Export SVG</button>
+            </div>
+            
+            <div id="svg-container"></div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

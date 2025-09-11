@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ---CONTROL ELEMENTS---
+    const openControlsBtn = document.getElementById('open-controls-btn');
+    const closeControlsBtn = document.getElementById('close-controls-btn');
+    const controlsPanel = document.getElementById('controls-panel');
+    const panelOverlay = document.getElementById('panel-overlay');
+    const showTourBtn = document.getElementById('show-tour-btn');
     const randomiseAllBtn = document.getElementById('randomise-all-btn');
     const randomiseShapesBtn = document.getElementById('randomise-shapes-btn');
     const randomiseColoursBtn = document.getElementById('randomise-colours-btn');
@@ -41,6 +46,74 @@ document.addEventListener('DOMContentLoaded', () => {
     let SVG_WIDTH = GRID_COLS * TILE_SIZE;
     let SVG_HEIGHT = GRID_ROWS * TILE_SIZE;
     let BACKGROUND_COLOR = '#EFEFEF';
+
+    // ---PANEL LOGIC---
+    const openPanel = () => {
+        controlsPanel.classList.add('is-open');
+        panelOverlay.classList.add('is-visible');
+        document.body.classList.add('panel-open');
+    };
+
+    const closePanel = () => {
+        controlsPanel.classList.remove('is-open');
+        panelOverlay.classList.remove('is-visible');
+        document.body.classList.remove('panel-open');
+    };
+    
+    // ---ONBOARDING TOUR---
+    const tour = new Shepherd.Tour({
+        useModalOverlay: true,
+        defaultStepOptions: {
+            classes: 'shadow-md bg-purple-dark',
+            scrollTo: true,
+            cancelIcon: { enabled: true },
+        }
+    });
+
+    tour.addStep({
+        title: 'Welcome!',
+        text: 'Welcome to the SVG Shape Generator! This quick tour will show you the main features.',
+        buttons: [{ text: 'Next', action: tour.next }]
+    });
+    tour.addStep({
+        title: 'The Canvas',
+        text: 'This is where your art is generated. You can also swipe on it to quickly change shapes or colours, or double-tap to randomise everything!',
+        attachTo: { element: '#svg-container', on: 'top' },
+        buttons: [{ text: 'Back', action: tour.back }, { text: 'Next', action: tour.next }]
+    });
+    tour.addStep({
+        title: 'Open Controls',
+        text: 'Tap this button to open the main controls panel where you can fine-tune your pattern.',
+        attachTo: { element: '#open-controls-btn', on: 'bottom' },
+        buttons: [{ text: 'Back', action: tour.back }, { text: 'Next', action: tour.next }],
+        beforeShowPromise: () => new Promise(resolve => {
+            closePanel();
+            setTimeout(resolve, 100);
+        })
+    });
+    tour.addStep({
+        title: 'Choose Your Style',
+        text: 'Inside the panel, you can control the grid layout, switch to outline mode, select colour themes, create a custom theme, and pick your favourite shapes!',
+        attachTo: { element: '#controls-panel', on: 'right' },
+        buttons: [{ text: 'Back', action: tour.back }, { text: 'Next', action: tour.next }],
+        beforeShowPromise: () => new Promise(resolve => {
+            openPanel();
+            setTimeout(resolve, 400);
+        })
+    });
+    tour.addStep({
+        title: 'Randomise & Download',
+        text: 'Use these buttons to randomise different parts of your pattern, then download it as a high-quality PNG or a scalable SVG file.',
+        attachTo: { element: '.button-group', on: 'top' },
+        buttons: [{ text: 'Back', action: tour.back }, { text: 'Done', action: tour.complete }],
+        beforeShowPromise: () => new Promise(resolve => {
+            closePanel();
+            setTimeout(resolve, 400);
+        })
+    });
+    
+    tour.on('complete', () => localStorage.setItem('hasSeenTour', 'true'));
+    tour.on('cancel', () => localStorage.setItem('hasSeenTour', 'true'));
 
     // ---HELPER FUNCTIONS---
     const getActiveColors = () => {
@@ -328,11 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---EVENT LISTENERS---
+    openControlsBtn.addEventListener('click', openPanel);
+    closeControlsBtn.addEventListener('click', closePanel);
+    panelOverlay.addEventListener('click', closePanel);
     randomiseAllBtn.addEventListener('click', randomiseAll);
     randomiseShapesBtn.addEventListener('click', randomiseShapes);
     randomiseColoursBtn.addEventListener('click', randomiseColours);
     downloadPngBtn.addEventListener('click', downloadPNG);
     exportSvgBtn.addEventListener('click', exportSVG);
+    showTourBtn.addEventListener('click', () => {
+        localStorage.removeItem('hasSeenTour');
+        tour.start();
+    });
     
     themeRadios.forEach(radio => radio.addEventListener('change', randomiseAll));
     shapeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', randomiseAll));
@@ -359,8 +439,69 @@ document.addEventListener('DOMContentLoaded', () => {
     
     strokeWidthSlider.addEventListener('input', () => { strokeWidthValue.textContent = strokeWidthSlider.value; });
     strokeWidthSlider.addEventListener('change', renderGrid);
+
+    controlsPanel.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('stepper-btn')) return;
+        const targetSliderId = e.target.dataset.target;
+        const step = parseInt(e.target.dataset.step, 10);
+        const slider = document.getElementById(targetSliderId);
+
+        if (slider) {
+            const min = parseInt(slider.min, 10);
+            const max = parseInt(slider.max, 10);
+            let currentValue = parseInt(slider.value, 10);
+            
+            let newValue = currentValue + step;
+            if (newValue < min) newValue = min;
+            if (newValue > max) newValue = max;
+
+            slider.value = newValue;
+            slider.dispatchEvent(new Event('input', { bubbles: true }));
+            slider.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    let touchstartX = 0;
+    let touchstartY = 0;
+    let lastTap = 0;
+    const swipeThreshold = 50;
+
+    svgContainer.addEventListener('touchstart', (e) => {
+        touchstartX = e.changedTouches[0].screenX;
+        touchstartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    svgContainer.addEventListener('touchend', (e) => {
+        const touchendX = e.changedTouches[0].screenX;
+        const touchendY = e.changedTouches[0].screenY;
+        const dX = touchendX - touchstartX;
+        const dY = touchendY - touchstartY;
+
+        if (Math.abs(dX) > swipeThreshold || Math.abs(dY) > swipeThreshold) {
+            if (Math.abs(dX) > Math.abs(dY)) {
+                randomiseShapes();
+            } else {
+                randomiseColours();
+            }
+        } else {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                randomiseAll();
+            }
+            lastTap = currentTime;
+        }
+    }, { passive: true });
+
+    svgContainer.addEventListener('dblclick', randomiseAll);
     
     // ---INITIAL SETUP---
     renderSwatches();
     randomiseAll();
+
+    if (!localStorage.getItem('hasSeenTour')) {
+        setTimeout(() => {
+            tour.start();
+        }, 1000);
+    }
 });
